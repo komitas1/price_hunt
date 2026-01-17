@@ -206,7 +206,7 @@ class TelegramController extends Controller
         ksort($signatureParams);
         $signature = md5(implode(':', $signatureParams) . ':' . $token);
 
-        Log::info('TP signature', $signatureParams);
+//        Log::info('TP signature', $signatureParams);
 
         $start = Http::withHeaders([
             'x-affiliate-user-id' => $token,
