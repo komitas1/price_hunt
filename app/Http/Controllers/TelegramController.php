@@ -268,5 +268,47 @@ class TelegramController extends Controller
             )->json() ?? [];
         });
     }
+    private function findCity(string $query): array
+    {
+        $query = mb_strtolower(trim($query));
+
+        if ($query === '') {
+            return [];
+        }
+
+        $cities = $this->getCities();
+        $results = [];
+
+        foreach ($cities as $city) {
+            if (
+                empty($city['name']) ||
+                empty($city['code'])
+            ) {
+                continue;
+            }
+
+            $name = mb_strtolower($city['name']);
+            $code = mb_strtolower($city['code']);
+
+            // 1️⃣ Точное совпадение по IATA (MOW, IST)
+            if ($code === $query) {
+                return [[
+                    'name' => $city['name'],
+                    'code' => $city['code'],
+                ]];
+            }
+
+            // 2️⃣ Совпадение по названию (частичное)
+            if (str_contains($name, $query)) {
+                $results[] = [
+                    'name' => $city['name'],
+                    'code' => $city['code'],
+                ];
+            }
+        }
+
+        // максимум 6 вариантов (для inline-кнопок)
+        return array_slice($results, 0, 6);
+    }
 
 }
