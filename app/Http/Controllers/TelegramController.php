@@ -189,13 +189,14 @@ class TelegramController extends Controller
         $token = env('TRAVELPAYOUTS_API_TOKEN');
         $host = env('TRAVELPAYOUTS_REAL_HOST');
         $ip = env('TRAVELPAYOUTS_USER_IP');
-
+        $locale = 'ru';
         $signatureParams = [
             'origin' => $data['from'],
             'destination' => $data['to'],
             'date' => $data['date'],
             'adults' => $data['adults'],
-            'marker' => $marker
+            'marker' => $marker,
+            'locale' => $locale,
         ];
 
         ksort($signatureParams);
