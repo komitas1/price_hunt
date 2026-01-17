@@ -208,7 +208,9 @@ class TelegramController extends Controller
             'x-affiliate-user-id' => $token,
             'x-real-host' => $host,
             'x-user-ip' => $ip,
-            'x-signature' => $signature
+            'x-signature' => $signature,
+            'Content-Type' => 'application/json',
+             'User-Agent' => 'PriceHuntBot/1.0; locale=ru'
         ])->post('https://tickets-api.travelpayouts.com/search/affiliate/start', [
             'marker' => $marker,
             'search_params' => [
