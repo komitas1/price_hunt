@@ -236,7 +236,7 @@ class TelegramController extends Controller
             'signature' => $signature
         ]);
 
-        Log::info('TP start response', ['response' => $start->json()]);
+        Log::info('TP start raw response', ['body' => $start->body()]);
 
         if (!$start->ok() || !isset($start->json()['search_id'])) return null;
 
