@@ -190,15 +190,19 @@ class TelegramController extends Controller
         $host = env('TRAVELPAYOUTS_REAL_HOST');
         $ip = env('TRAVELPAYOUTS_USER_IP');
         $locale = 'ru';
-        $signatureParams = [
-            'origin' => $data['from'],
-            'destination' => $data['to'],
-            'date' => $data['date'],
-            'adults' => $data['adults'],
-            'marker' => $marker,
-            'locale' => $locale,
-        ];
 
+        // Подпись для API — теперь с детьми, младенцами и классом
+        $signatureParams = [
+            'adults' => $data['adults'],
+            'children' => $data['children'],
+            'date' => $data['date'],
+            'destination' => $data['to'],
+            'infants' => $data['infants'],
+            'locale' => $locale,
+            'marker' => $marker,
+            'origin' => $data['from'],
+            'trip_class' => $data['trip_class']
+        ];
         ksort($signatureParams);
         $signature = md5(implode(':', $signatureParams) . ':' . $token);
 
@@ -209,10 +213,13 @@ class TelegramController extends Controller
             'x-real-host' => $host,
             'x-user-ip' => $ip,
             'x-signature' => $signature,
-            'Content-Type' => 'application/json',
-             'User-Agent' => 'PriceHuntBot/1.0; locale=ru'
+            'User-Agent' => 'PriceHuntBot/1.0; locale=' . $locale,
+            'Content-Type' => 'application/json'
         ])->post('https://tickets-api.travelpayouts.com/search/affiliate/start', [
             'marker' => $marker,
+            'locale' => $locale,
+            'currency_code' => 'RUB',
+            'market_code' => 'RU',
             'search_params' => [
                 'trip_class' => $data['trip_class'],
                 'passengers' => [
@@ -221,29 +228,34 @@ class TelegramController extends Controller
                     'infants' => $data['infants'],
                 ],
                 'directions' => [[
-                    'origin' => $data['from'],
-                    'destination' => $data['to'],
+                    'origin' => strtoupper($data['from']),
+                    'destination' => strtoupper($data['to']),
                     'date' => $data['date']
                 ]]
-            ]
+            ],
+            'signature' => $signature
         ]);
 
         Log::info('TP start response', $start->json());
 
-        if (!$start->ok()) return null;
+        if (!$start->ok() || !isset($start->json()['search_id'])) return null;
 
         $searchId = $start->json('search_id');
+
+        // Подождать генерацию результатов
         sleep(3);
 
         $results = Http::withHeaders([
             'x-affiliate-user-id' => $token,
-            'x-real-host' => $host
+            'x-real-host' => $host,
+            'User-Agent' => 'PriceHuntBot/1.0; locale=' . $locale
         ])->get("https://tickets-api.travelpayouts.com/search/affiliate/results/{$searchId}");
 
         Log::info('TP results', $results->json());
 
-        return $results->json('tickets');
+        return $results->json('tickets') ?? [];
     }
+
 
     private function sendMessage($chatId, $text)
     {
