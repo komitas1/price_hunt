@@ -206,7 +206,7 @@ class TelegramController extends Controller
         ksort($signatureParams);
         $signature = md5(implode(':', $signatureParams) . ':' . $token);
 
-//        Log::info('TP signature', $signatureParams);
+        Log::info('TP signature', ['params' => $signatureParams]);
 
         $start = Http::withHeaders([
             'x-affiliate-user-id' => $token,
@@ -236,7 +236,7 @@ class TelegramController extends Controller
             'signature' => $signature
         ]);
 
-//        Log::info('TP start response', $start->json());
+        Log::info('TP start response', ['response' => $start->json()]);
 
         if (!$start->ok() || !isset($start->json()['search_id'])) return null;
 
@@ -251,7 +251,7 @@ class TelegramController extends Controller
             'User-Agent' => 'PriceHuntBot/1.0; locale=' . $locale
         ])->get("https://tickets-api.travelpayouts.com/search/affiliate/results/{$searchId}");
 
-        Log::info('TP results', $results->json());
+        Log::info('TP results', ['results' => $results->json()]);
 
         return $results->json('tickets') ?? [];
     }
